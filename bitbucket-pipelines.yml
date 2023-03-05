@@ -1,0 +1,26 @@
+pipelines:
+  branches:
+    'master':
+     - step: 
+         name: Test
+         script:
+           - echo "Testing app.."
+     - step:
+         name: Publish
+         script:
+           - echo "Publishing app.."
+           - docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+           - docker build -t $DOCKER_USER/todoapi-image:v16 --build-arg master .
+           - docker push $DOCKER_USER/todoapi-image:v16
+         services:
+           - docker
+     - step:
+         name: Deploy
+         script:
+           - echo "Deloying app.."
+           - pipe: atlassian/ssh-run:0.4.1
+             variables:
+               SSH_USER: ec2-user
+               SERVER: 54.197.204.189
+               SSH_KEY: $EC2_PEM_PRIVATE_KEY
+               COMMAND: |
